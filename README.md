@@ -1,7 +1,7 @@
-Feito por: Julio Cesar Junior (570047)
-Miguel Menezes (573825)
-Pedro Provadelli (572547)
-Arthur Moreira (571532)
+Feito por: Julio Cesar Junior (570047),
+Miguel Menezes (573825),
+Pedro Provadelli (572547),
+Arthur Moreira (571532) e
 Vitor Louzano (573885)
 
 O script foi desenvolvido com base na seguinte regra de negócio central :
