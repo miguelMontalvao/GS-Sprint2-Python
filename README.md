@@ -9,136 +9,160 @@ O script foi desenvolvido com base na seguinte regra de negócio central :
 A regra de negócio central da plataforma Pelé Next Gen é o desbloqueio de contato entre clube e atleta, 
 pois ele controla a transição entre visualização pública e acesso completo ao atleta, além de habilitar avaliações e comunicação via chat.
 
-# ⚽ Pelé Next Gen — Plataforma de Peneiras Digitais
+# ⚽ Pelé Next Gen — Validação da Regra de Negócio Central
 
-> Conectando clubes e atletas de forma inteligente, transparente e segura.
+> Script Python de validação da plataforma de peneiras digitais Pelé Next Gen, executado em terminal/console.
 
 ---
 
 ## Visão Geral
 
-**Pelé Next Gen** é uma plataforma digital de peneiras que digitaliza e estrutura o processo de descoberta e contratação de atletas. Clubes e olheiros podem buscar talentos com base em critérios técnicos, visualizar perfis públicos e, após o desbloqueio de contato, acessar dados completos, avaliações detalhadas e iniciar negociações via chat integrado.
+`pele_nextgen_validacao.py` é um script interativo que implementa e valida a **regra de negócio central** da plataforma Pelé Next Gen: o controle de acesso a dados de atletas via desbloqueio de contato. O programa simula os módulos de busca, perfil, avaliações e chat, aplicando as restrições de acesso diretamente no código.
 
-A plataforma integra quatro módulos principais:
+O script foi estruturado com base nos seguintes pilares técnicos:
 
-| Módulo | Descrição |
-|--------|-----------|
-| 🔍 **Busca** | Pesquisa de atletas por posição, idade, localização e outros filtros |
-| 👤 **Perfil** | Dados públicos resumidos e perfil completo (pós-desbloqueio) |
-| ⭐ **Avaliações** | Sistema de notas e feedbacks técnicos por parte dos clubes |
-| 💬 **Chat** | Canal de comunicação direta entre clube e atleta |
+| # | Requisito |
+|---|-----------|
+| 1 | Armazenamento de dados em listas e dicionários |
+| 2 | Análise via matrizes e laços de repetição |
+| 3 | Regras de negócio implementadas com estruturas condicionais |
+| 4 | Código organizado em funções para manutenção e reutilização |
+| 5 | Interatividade via `input()` e menu com laço `while` |
 
 ---
 
 ## Regra de Negócio Central — Desbloqueio de Contato
 
-O **desbloqueio de contato** é a regra mais importante da plataforma. Ele controla a transição entre a visualização pública de um atleta e o acesso completo ao seu perfil, além de habilitar avaliações e a comunicação via chat.
+O **desbloqueio de contato** é o núcleo do sistema. Ele controla a transição entre visualização pública e acesso completo ao atleta, além de habilitar avaliações e chat.
 
-### Como funciona
+### Fluxo implementado
 
 ```
 [Clube busca atleta]
         │
         ▼
 [Visualiza dados públicos resumidos]
+  nome, posição, idade, nota_media, cidade
         │
         ▼
-[Clube solicita desbloqueio do atleta]
+[Clube solicita desbloqueio]
+  desbloquear_contato(clube, atleta)
         │
         ▼
-[Acesso permanente liberado para o par (Clube ↔ Atleta)]
+[Acesso permanente liberado — par (clube_id, atleta_id) gravado em Set]
         │
-        ├─► Perfil completo
-        ├─► Avaliações
-        └─► Chat / Negociação
+        ├─► perfil completo  → visualizar_perfil()
+        ├─► avaliações       → visualizar_avaliacoes()
+        └─► chat             → iniciar_chat()
 ```
 
 ### Regras do Desbloqueio (RN-14 a RN-17)
 
-- **RN-14** — Um clube somente pode acessar os dados completos de um atleta após realizar o desbloqueio desse atleta.
-- **RN-15** — O desbloqueio é **único por par (clube, atleta)**: uma vez realizado, não pode ser desfeito nem repetido.
-- **RN-16** — **Sem desbloqueio:** o clube visualiza apenas os dados públicos resumidos do atleta.
-- **RN-17** — **Com desbloqueio:** o clube obtém acesso completo ao perfil, histórico, avaliações e chat.
+- **RN-14** — Acesso a dados completos, avaliações e chat exige desbloqueio prévio.
+- **RN-15** — O desbloqueio é **único e permanente** por par `(clube_id, atleta_id)` — armazenado em um `Set[Tuple[int, int]]`; tentativas repetidas retornam aviso sem novo registro.
+- **RN-16** — **Sem desbloqueio:** `visualizar_perfil()` retorna apenas `dados_publicos()` — nome, posição, idade, nota média e cidade.
+- **RN-17** — **Com desbloqueio:** `visualizar_perfil()` retorna `dados_completos()` — acrescenta telefone, e-mail, vídeos e avaliações.
 
 ### Regras do Chat (RN-18 a RN-22)
 
-- **RN-18** — O canal de chat entre clube e atleta só é habilitado após o desbloqueio.
-- **RN-19** — A iniciativa de contato via chat é exclusiva do clube (pós-desbloqueio).
-- **RN-20** — O atleta pode responder e interagir no chat assim que o clube iniciar a conversa.
-- **RN-21** — O histórico de chat é preservado e vinculado ao par (clube, atleta).
-- **RN-22** — Tentativas de acesso ao chat sem desbloqueio prévio são bloqueadas pelo sistema.
+- **RN-18** — `iniciar_chat()` lança `RegraDeNegocioError` se não houver desbloqueio para o par.
+- **RN-19** — A iniciativa do chat é exclusiva do clube (chamada sempre parte do lado clube).
+- **RN-20** — Após desbloqueio confirmado, o canal é habilitado e a mensagem de sucesso é retornada.
+- **RN-21** — O vínculo chat ↔ par `(clube, atleta)` é garantido pela chave do desbloqueio.
+- **RN-22** — Tentativas sem desbloqueio são bloqueadas por exceção tipada (`RegraDeNegocioError`).
 
 ---
 
-## Módulos e Funcionalidades
-
-### 🔍 Busca de Atletas
-- Filtros por posição, idade, localização, nível e experiência
-- Resultados exibem apenas dados públicos resumidos
-- Clube pode marcar atletas para desbloqueio a partir dos resultados
-
-### 👤 Perfil do Atleta
-
-| Sem Desbloqueio | Com Desbloqueio |
-|-----------------|-----------------|
-| Nome e foto | Dados pessoais completos |
-| Posição e idade | Histórico de clubes |
-| Localização | Documentação e contatos |
-| Estatísticas básicas | Avaliações recebidas |
-| — | Acesso ao chat |
-
-### ⭐ Avaliações
-- Disponíveis somente para clubes que realizaram o desbloqueio
-- Clubes podem registrar avaliações técnicas por atleta
-- O atleta pode visualizar as avaliações recebidas
-
-### 💬 Chat
-- Habilitado exclusivamente após desbloqueio confirmado
-- Canal persistente e vinculado ao par (clube, atleta)
-- Suporte a negociações e comunicações formais
-
----
-
-## Arquitetura de Alto Nível
+## Estrutura do Código
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                     Pelé Next Gen                        │
-│                                                          │
-│  ┌─────────┐   ┌─────────┐   ┌────────────┐  ┌──────┐    │
-│  │  Busca  │──►│  Perfil │──►│Desbloqueio │─►│ Chat │    │
-│  └─────────┘   └─────────┘   └────────────┘  └──────┘    │
-│                                     │                    │
-│                               ┌─────▼─────┐              │
-│                               │ Avaliações│              │
-│                               └───────────┘              │
-└──────────────────────────────────────────────────────────┘
+pele_nextgen_validacao.py
+│
+├── Modelos de Domínio
+│   ├── Atleta          # dados_publicos() / dados_completos()
+│   └── Clube
+│
+├── Exceção
+│   └── RegraDeNegocioError
+│
+├── Camada de Negócio
+│   └── PlataformaScouting
+│       ├── possui_desbloqueio()
+│       ├── desbloquear_contato()    ← regra central
+│       ├── visualizar_perfil()
+│       ├── visualizar_avaliacoes()
+│       ├── iniciar_chat()
+│       ├── gerar_matriz_atletas()
+│       ├── classificar_talento()
+│       └── calcular_media_geral()
+│
+├── Funções de UI / Menu
+│   ├── cadastrar_atleta()
+│   ├── cadastrar_clube()
+│   ├── listar_atletas() / listar_clubes()
+│   ├── buscar_atletas_por_filtros()
+│   ├── desbloquear_contato_menu()
+│   ├── visualizar_perfil_menu()
+│   ├── visualizar_avaliacoes_menu()
+│   ├── iniciar_chat_menu()
+│   ├── exibir_matriz_atletas()
+│   ├── exibir_media_geral()
+│   └── carregar_dados_exemplo()
+│
+└── Execução
+    └── menu_principal()
 ```
 
 ---
 
-## Como Executar Localmente
+## Menu Interativo
+
+Ao executar o script, o usuário acessa um menu com as seguintes opções:
+
+| Opção | Ação |
+|-------|------|
+| `1` | Cadastrar atleta |
+| `2` | Cadastrar clube |
+| `3` | Listar atletas |
+| `4` | Listar clubes |
+| `5` | Buscar atletas por filtros (posição, idade, nota, cidade) |
+| `6` | **Desbloquear contato** de atleta ← regra central |
+| `7` | Visualizar perfil de atleta (resumido ou completo) |
+| `8` | Visualizar avaliações (exige desbloqueio) |
+| `9` | Iniciar chat com atleta (exige desbloqueio) |
+| `10` | Exibir matriz de atletas |
+| `11` | Exibir média geral dos atletas |
+| `12` | Carregar dados de exemplo |
+| `0` | Sair |
+
+---
+
+## Classificação de Talentos
+
+A função `classificar_talento()` categoriza atletas com base na nota média:
+
+| Nota Média | Status |
+|-----------|--------|
+| ≥ 8.5 | `APROVADO` |
+| ≥ 7.0 | `EM OBSERVAÇÃO` |
+| < 7.0 | `REPROVADO` |
+
+---
+
+## Como Executar
+
+**Pré-requisito:** Python 3.7 ou superior (uso de `dataclasses`).
 
 ```bash
 # Clone o repositório
 git clone https://github.com/seu-org/pele-next-gen.git
 cd pele-next-gen
 
-# Instale as dependências
-npm install   # ou yarn / pnpm
-
-# Configure as variáveis de ambiente
-cp .env.example .env
-
-# Execute em modo de desenvolvimento
-npm run dev
+# Execute o script
+python pele_nextgen_validacao.py
 ```
 
-
-
-
-
-
+Para uma demonstração rápida, escolha a opção `12` no menu para carregar os dados de exemplo pré-configurados (3 atletas e 2 clubes).
 
 ---
 
